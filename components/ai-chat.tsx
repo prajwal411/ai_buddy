@@ -46,7 +46,7 @@ const CHAT_MODES = {
     name: "Breathing Guide",
     icon: Wind,
     description: "Let's practice calming breathing exercises",
-    color: "bg-green-500/20 text-green-400 border-green-400/30",
+    color: "bg-green-700 text-white border-green-400",
   },
 }
 

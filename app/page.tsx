@@ -5,9 +5,6 @@ import { AIChat } from "@/components/ai-chat"
 import { MoodTracker } from "@/components/mood-tracker"
 import { WellnessTools } from "@/components/wellness-tools"
 import { UserDashboard } from "@/components/user-dashboard"
-import { Features } from "@/components/features"
-import { LogoMarquee } from "@/components/logo-marquee"
-import { Pricing } from "@/components/pricing"
 import { AppverseFooter } from "@/components/appverse-footer"
 import Script from "next/script"
 
@@ -69,9 +66,6 @@ export default function Page() {
         <MoodTracker />
         <WellnessTools />
         <UserDashboard />
-        <Features />
-        <LogoMarquee />
-        <Pricing />
         <AppverseFooter />
       </main>
 

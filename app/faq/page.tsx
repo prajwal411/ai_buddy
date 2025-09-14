@@ -112,7 +112,6 @@ export default function FAQPage() {
                   <p className="text-neutral-300">
                     Simply{" "}
                     <a href="/contact" className="text-lime-300 underline">
-                      contact us
                     </a>{" "}
                     with your project details, references, and timeline. We’ll provide a proposal and next steps.
                   </p>

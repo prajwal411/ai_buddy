@@ -76,7 +76,7 @@ export default function RootLayout({
       </head>
       <body>
         <div className="fixed inset-0 z-0 bg-black">
-          <Plasma color="#9333ea" speed={0.5} direction="forward" scale={1.2} opacity={0.25} mouseInteractive={true} />
+          <Plasma color="#9333ea" speed={0.5} direction="forward" scale={1} opacity={0.10} mouseInteractive={false} />
         </div>
 
         <div className="fixed top-4 right-4 z-50">

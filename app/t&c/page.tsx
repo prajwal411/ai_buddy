@@ -90,8 +90,6 @@ export default function TermsPage() {
                 </section>
 
                 <section className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-white">6. Contact Us</h2>
-                  <p className="text-neutral-300">If you have any questions about these Terms, please contact us at:</p>
                   <p className="text-neutral-300">
                     Email:{" "}
                     <a href="mailto:hello@theskitbit.com" className="text-lime-300 underline">

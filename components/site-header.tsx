@@ -14,6 +14,18 @@ export function SiteHeader() {
     { href: "#profile", label: "Profile", icon: User },
   ]
 
+
+  // Scroll to #chat section with offset for sticky header
+  const handleStartChat = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const chatSection = document.getElementById("chat");
+    if (chatSection) {
+      const yOffset = -80; // adjust if header height changes
+      const y = chatSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 p-4">
       <div className="container mx-auto max-w-4xl">
@@ -36,12 +48,13 @@ export function SiteHeader() {
           {/* Desktop CTA */}
           <div className="hidden md:flex">
             <Button
-              asChild
+              type="button"
+              onClick={handleStartChat}
               className="bg-lime-400 text-black font-medium rounded-lg px-6 py-2.5
                          hover:bg-lime-300 hover:shadow-md hover:scale-[1.02]
                          transition-all"
             >
-              <Link href="#chat">Start Chat</Link>
+              Start Chat
             </Button>
           </div>
 

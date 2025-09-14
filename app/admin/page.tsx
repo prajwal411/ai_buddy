@@ -122,7 +122,6 @@ const defaultContent: ContentData = {
     buttonText: "Chat With Us",
   },
   features: {
-    title: "What makes us the best studio for you.",
     subtitle: "Discover our unique approach to 3D animation",
   },
   footer: {
@@ -1580,7 +1579,6 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <p className="text-white font-medium">Update Pricing</p>
-                    <p className="text-neutral-400 text-sm">Manage your pricing plans and video examples</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
