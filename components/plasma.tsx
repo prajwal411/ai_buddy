@@ -113,11 +113,11 @@ void main() {
 }`
 
 export const Plasma: React.FC<PlasmaProps> = ({
-  color = "#6366f1", // Default to indigo color for better visibility
-  speed = 0.8, // Slightly lower default speed for smoother animation
+  color = "#6366f1",
+  speed = 2, // Faster default speed
   direction = "forward",
   scale = 1,
-  opacity = 1.2, // Slightly higher opacity for better contrast
+  opacity = 1.2,
   mouseInteractive = true,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -212,7 +212,7 @@ export const Plasma: React.FC<PlasmaProps> = ({
         iResolution: { value: new Float32Array([1, 1]) },
         uCustomColor: { value: new Float32Array(customColorRgb) },
         uUseCustomColor: { value: useCustomColor },
-        uSpeed: { value: speed * 0.4 },
+        uSpeed: { value: speed }, // No extra multiplier
         uDirection: { value: directionMultiplier },
         uScale: { value: scale },
         uOpacity: { value: opacity },
@@ -256,8 +256,8 @@ export const Plasma: React.FC<PlasmaProps> = ({
     let lastTime = 0
     const t0 = performance.now()
     
-    // Optimized framerate based on device capability
-    const frameInterval = isIOS ? 80 : isMobile ? 60 : 30; // Higher framerates for smoother animation
+  // Higher framerate for smoother animation
+  const frameInterval = isIOS ? 30 : isMobile ? 20 : 12; // ~33-50+ FPS
     
     // Use RAF with throttling for smoother animations
     const loop = (t: number) => {

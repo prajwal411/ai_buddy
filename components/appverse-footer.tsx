@@ -14,8 +14,8 @@ interface FooterContent {
 }
 
 const defaultContent: FooterContent = {
-  tagline: "Your mental health companion, supporting you whenever you need it.",
-  copyright: "© 2025 — MindBuddy",
+  tagline: "Your AI mental health companion. Anonymous. No signup. No tracking. Always here for you.",
+  copyright: "© 2025 — MindBuddy. All rights reserved.",
 }
 
 export function AppverseFooter() {
@@ -38,16 +38,19 @@ export function AppverseFooter() {
 
   return (
     <section className="text-white">
-      {/* Contact CTA */}
+
+      {/* Crisis/Emergency Banner */}
       <div className="container mx-auto px-4 pt-12 sm:pt-16">
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2">
           <Button
             asChild
-            className="rounded-full bg-lime-400 px-6 py-2 text-sm font-medium text-black shadow-[0_0_20px_rgba(163,230,53,0.35)] hover:bg-lime-300"
+            className="rounded-full bg-red-500 px-6 py-2 text-sm font-semibold text-white shadow-[0_0_20px_rgba(239,68,68,0.25)] hover:bg-red-400"
           >
-            <a href="https://wa.link/rc25na" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.opencounseling.com/suicide-hotlines" target="_blank" rel="noopener noreferrer">
+              🚨 Crisis? Click for Emergency Hotlines
             </a>
           </Button>
+          <span className="text-xs text-neutral-400 mt-1">If you or someone you know is in crisis, help is available 24/7.</span>
         </div>
       </div>
 
@@ -61,10 +64,13 @@ export function AppverseFooter() {
             {/* Brand */}
             <div className="space-y-3">
               <div className="flex items-center gap-1.5">
-                <Image src="/icons/skitbit-white.svg" alt="Skitbit logo" width={24} height={24} className="h-6 w-6" />
-                <span className="text-xl font-semibold text-lime-300">Skitbit</span>
+                <Image src="/placeholder-logo.svg" alt="MindBuddy logo" width={28} height={28} className="h-7 w-7" />
+                <span className="text-xl font-semibold text-lime-300">MindBuddy</span>
               </div>
               <p className="max-w-sm text-sm text-neutral-400">{content.tagline}</p>
+              <div className="mt-2">
+                <span className="inline-block rounded bg-lime-900/30 text-lime-300 px-2 py-1 text-xs font-medium">Anonymous. No signup. No tracking.</span>
+              </div>
             </div>
 
             {/* Navigation */}
@@ -72,13 +78,11 @@ export function AppverseFooter() {
               <div>
                 <h5 className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">Navigation</h5>
                 <ul className="space-y-2 text-sm text-neutral-300">
-                  {["Home", "Features", "Testimonials", "Pricing", "Blog", "Download"].map((item) => (
-                    <li key={item}>
-                      <Link href={`#${item.toLowerCase()}`} className="hover:text-lime-300">
-                        {item}
-                      </Link>
-                    </li>
-                  ))}
+                  <li><Link href="#chat" className="hover:text-lime-300">Chat</Link></li>
+                  <li><Link href="#mood-tracker" className="hover:text-lime-300">Mood Tracker</Link></li>
+                  <li><Link href="#wellness-tools" className="hover:text-lime-300">Wellness Tools</Link></li>
+                  <li><Link href="#faq" className="hover:text-lime-300">FAQ</Link></li>
+                  <li><Link href="#about" className="hover:text-lime-300">About</Link></li>
                 </ul>
               </div>
               <div>
@@ -87,11 +91,11 @@ export function AppverseFooter() {
                   <li className="flex items-center gap-2">
                     <Twitter className="h-4 w-4 text-neutral-400" />
                     <a
-                      href="https://twitter.com/theskitbit"
+                      href="https://twitter.com/mindbuddyai"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-lime-300"
-                      aria-label="Follow skitbit on Twitter"
+                      aria-label="Follow MindBuddy on Twitter"
                     >
                       X/Twitter
                     </a>
@@ -99,11 +103,11 @@ export function AppverseFooter() {
                   <li className="flex items-center gap-2">
                     <Youtube className="h-4 w-4 text-neutral-400" />
                     <a
-                      href="https://www.youtube.com/@skitbitinternational"
+                      href="https://www.youtube.com/@mindbuddyai"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-lime-300"
-                      aria-label="Subscribe to skitbit on YouTube"
+                      aria-label="Subscribe to MindBuddy on YouTube"
                     >
                       YouTube
                     </a>
@@ -111,25 +115,13 @@ export function AppverseFooter() {
                   <li className="flex items-center gap-2">
                     <Instagram className="h-4 w-4 text-neutral-400" />
                     <a
-                      href="https://instagram.com/theskitbit"
+                      href="https://instagram.com/mindbuddyai"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-lime-300"
-                      aria-label="Follow skitbit on Instagram"
+                      aria-label="Follow MindBuddy on Instagram"
                     >
                       Instagram
-                    </a>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-neutral-400" />
-                    <a
-                      href="https://threads.com/theskitbit"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-lime-300"
-                      aria-label="Follow skitbit on Threads"
-                    >
-                      Threads
                     </a>
                   </li>
                 </ul>
@@ -140,6 +132,7 @@ export function AppverseFooter() {
           {/* Bottom bar */}
           <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-neutral-500 sm:flex-row">
             <p>{content.copyright}</p>
+            <span className="text-xs text-neutral-400">This site does not collect personal data. For informational and support purposes only.</span>
             <div className="flex items-center gap-6">
               <Link href="/revisions" className="hover:text-lime-300">
                 Revision Policy

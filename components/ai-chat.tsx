@@ -20,7 +20,19 @@ interface Message {
   content: string
   sender: "user" | "ai"
   timestamp: Date
-  mood?: string
+  mood?: {
+    label: string
+    emoji: string
+    score: number
+  }
+  risk?: {
+    detected: boolean
+    severity: "high" | "medium" | "low" | null
+    keywords?: string[]
+    categories?: string[]
+  }
+  copingTool?: string // e.g. 'breathing', 'grounding', 'CBT', etc.
+  json?: any // for backend/frontend structured output
 }
 
 type ChatMode = "listener" | "motivator" | "journaling" | "breathing"
@@ -126,12 +138,17 @@ export function AIChat() {
   }
 
   const handleQuickResponse = (response: (typeof QUICK_RESPONSES)[0]) => {
+    // Mood detection for quick response
+    const mood = detectMood(response.text)
+    const risk = detectRisk(response.text)
     const userMessage: Message = {
       id: Date.now().toString(),
       content: response.text,
       sender: "user",
       timestamp: new Date(),
-      mood: response.mood,
+      mood,
+      risk,
+      json: { type: 'user', text: response.text, mood, risk },
     }
 
     setMessages((prev) => [...prev, userMessage])
@@ -139,63 +156,82 @@ export function AIChat() {
     setIsTyping(true)
 
     setTimeout(() => {
-      const aiResponse = generateMoodResponse(response.mood)
+      const aiResponse = generateMoodResponse(mood.label)
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: aiResponse,
         sender: "ai",
         timestamp: new Date(),
+        copingTool: suggestCopingTool(mood.label),
+        json: { type: 'ai', text: aiResponse, copingTool: suggestCopingTool(mood.label) },
       }
       setMessages((prev) => [...prev, aiMessage])
       setIsTyping(false)
-      
-      // Show quick responses again after AI responds
       setShowQuickResponses(true)
-      
-      // Focus the input after AI response
       const inputElement = document.getElementById('ai-chat-input') as HTMLInputElement;
       if (inputElement) inputElement.focus();
     }, 1500)
   }
 
-  const generateMoodResponse = (mood: string): string => {
-    const responses = {
-      sad: [
-        "I hear that you're feeling sad, and I want you to know that it's completely okay to feel this way. Sadness is a natural human emotion. Can you tell me what's contributing to these feelings?",
-        "It sounds like you're going through a difficult time. Your feelings are valid, and I'm here to support you. What would help you feel a little lighter right now?",
-      ],
-      anxious: [
-        "I understand you're feeling anxious. That can be really overwhelming. Let's take this one step at a time. Can you tell me what's making you feel anxious right now?",
-        "Anxiety can feel so intense, but you're not alone in this. Would it help to try a quick breathing exercise, or would you prefer to talk through what's worrying you?",
-      ],
-      angry: [
-        "I can sense your anger, and those feelings are completely valid. Sometimes anger is our way of protecting ourselves. What's behind these feelings of anger?",
-        "It sounds like something has really upset you. Anger often signals that something important to us has been threatened. Can you help me understand what happened?",
-      ],
-      happy: [
-        "I'm so glad to hear you're feeling happy! It's wonderful when we can recognize and celebrate positive moments. What's bringing you joy today?",
-        "That's fantastic! Happiness is such a gift. I'd love to hear more about what's making you feel good right now.",
-      ],
-    }
+  // Mood detection helper
+  const detectMood = (text: string) => {
+    const lower = text.toLowerCase()
+    if (lower.includes('anxious') || lower.includes('panic')) return { label: 'anxious', emoji: '😰', score: 2 }
+    if (lower.includes('sad') || lower.includes('depress')) return { label: 'sad', emoji: '😢', score: 1 }
+    if (lower.includes('angry')) return { label: 'angry', emoji: '😠', score: 2 }
+    if (lower.includes('happy') || lower.includes('calm')) return { label: 'calm', emoji: '😊', score: 4 }
+    return { label: 'neutral', emoji: '🙂', score: 3 }
+  }
 
-    const moodResponses = responses[mood as keyof typeof responses] || responses.sad
-    return moodResponses[Math.floor(Math.random() * moodResponses.length)]
+  // Risk detection helper
+  const detectRisk = (text: string) => {
+    const result = analyzeText(text)
+    return {
+      detected: result.detected,
+      severity: result.severity,
+      keywords: result.keywords,
+      categories: result.categories,
+    }
+  }
+
+  // Suggest coping tool based on mood
+  const suggestCopingTool = (mood: string) => {
+    if (mood === 'anxious') return 'breathing'
+    if (mood === 'sad') return 'CBT reframe'
+    if (mood === 'angry') return 'grounding'
+    if (mood === 'calm') return 'mini-activation'
+    return 'breathing'
+  }
+
+  // AI response with coping tool suggestion
+  const generateMoodResponse = (mood: string): string => {
+    if (mood === 'anxious') return "I sense some anxiety. Would you like to try a breathing exercise or grounding technique?"
+    if (mood === 'sad') return "It sounds like you're feeling down. Would you like a CBT reframe or to try a gratitude exercise?"
+    if (mood === 'angry') return "Anger is valid. Would you like to try a grounding exercise to help you feel centered?"
+    if (mood === 'calm') return "I'm glad you're feeling calm! Would you like to try a mini-activation or share something positive?"
+    return "Thank you for sharing. Would you like to try a coping tool such as breathing or grounding?"
   }
 
   const generateAIResponse = (userInput: string): string => {
-    // Use the crisis detection system
-    const crisisResult = analyzeText(userInput)
-
-    if (crisisResult.detected && crisisResult.severity) {
-      setCrisisLevel(crisisResult.severity)
-      return getRecommendedResponse(crisisResult)
+    // Mood and risk detection
+    const mood = detectMood(userInput)
+    const risk = detectRisk(userInput)
+    if (risk.detected && risk.severity) {
+      setCrisisLevel(risk.severity)
+      return getRecommendedResponse({
+        ...risk,
+        message: userInput,
+        shouldShowResources: true,
+      })
     }
-
+    // Suggest coping tool
+    const tool = suggestCopingTool(mood.label)
+    // Mode-based response with coping tool
     const modeResponses = {
       listener: [
-        "I hear you, and I want you to know that your feelings are completely valid. Can you tell me more about what's been on your mind?",
-        "Thank you for sharing that with me. It takes courage to open up. What would help you feel more supported right now?",
-        "I'm listening without judgment. Your thoughts and feelings matter. How long have you been experiencing this?",
+        `I hear you, and your feelings are valid. Would you like to try a ${tool} exercise?`,
+        `Thank you for sharing. If you're open, I can guide you through a ${tool} technique.`,
+        `I'm listening. Would you like to try a coping tool like ${tool}?`,
       ],
       motivator: [
         "You've got this! I can hear your strength even in sharing this challenge. What's one small step you could take today that would make you feel proud?",
@@ -322,11 +358,18 @@ export function AIChat() {
     >
       <section id="chat" className="py-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-4">AI Mental Health Chat</h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
-              Choose your preferred support mode and have a personalized conversation with your AI companion.
-            </p>
+          <div className="flex flex-col items-center mb-8">
+            <div className="mb-4 w-full">
+              <div className="rounded-lg bg-gradient-to-r from-lime-400/80 to-blue-400/80 text-black font-semibold py-2 px-4 text-center shadow-md border border-lime-300">
+                <span className="mr-2">🕵️‍♂️</span> Anonymous. No signup. No tracking.
+              </div>
+            </div>
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-white mb-4">AI Mental Health Chat</h2>
+              <p className="text-gray-300 max-w-2xl mx-auto">
+                Choose your preferred support mode and have a personalized conversation with your AI companion.
+              </p>
+            </div>
           </div>
 
         <div className="flex flex-wrap gap-3 justify-center mb-6">
@@ -372,8 +415,9 @@ export function AIChat() {
                         {message.sender === "user" ? "You" : CHAT_MODES[currentMode].name}
                       </span>
                       {message.mood && (
-                        <Badge variant="outline" className="text-xs">
-                          {message.mood}
+                        <Badge variant="outline" className="text-xs flex items-center gap-1">
+                          <span>{message.mood.emoji}</span>
+                          <span className="capitalize">{message.mood.label}</span>
                         </Badge>
                       )}
                     </div>
