@@ -263,7 +263,7 @@ export const Plasma: React.FC<PlasmaProps> = ({
     const loop = (t: number) => {
       const delta = t - lastTime
       if (delta > frameInterval) { // Adjusted frame rate for better performance
-        const timeValue = (t - t0) * 0.001 * (speed * 0.5)
+        const timeValue = (t - t0) * 0.001 * speed; // No extra slow-down
         if (direction === "pingpong") {
           const cycle = Math.sin(timeValue * 0.5) * directionMultiplier
           ;(program.uniforms.uDirection as any).value = cycle
