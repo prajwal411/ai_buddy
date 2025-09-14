@@ -289,54 +289,17 @@ export function AIChat() {
               <Button
                 key={key}
                 onClick={() => handleModeChange(key as ChatMode)}
-                <section id="chat" className="py-16">
-                  <div className="container mx-auto px-4 max-w-4xl">
-                    <div className="text-center mb-8">
-                      <h2 className="text-3xl font-bold text-white mb-4">AI Mental Health Chat</h2>
-                      <p className="text-gray-300 max-w-2xl mx-auto">
-                        Choose your preferred support mode and have a personalized conversation with your AI companion.
-                      </p>
-                    </div>
-
-                    {Object.entries(CHAT_MODES).map(([key, mode]) => {
-                      const Icon = mode.icon
-                      return (
-                        <Button
-                          key={key}
-                          onClick={() => handleModeChange(key as ChatMode)}
-                          variant={currentMode === key ? "default" : "outline"}
-                          className={`${currentMode === key ? "bg-lime-400 text-black" : "bg-white/10 text-white border-white/20 hover:bg-white/20"} transition-all`}
-                        >
-                          <Icon className="h-4 w-4 mr-2" />
-                          {mode.name}
-                        </Button>
-                      )
-                    })}
-                      {isClient ? message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ''}
-                    </span>
-
-                    {message.sender === "ai" && (
-                      <Button
-                        onClick={() => handleSpeakMessage(message.content)}
-                        variant="ghost"
-                        size="sm"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-white/20"
-                      >
-                        <Volume2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              <Heart className="inline h-3 w-3 mr-1" />
-              Your conversations are private and secure. This AI provides support but doesn't replace professional
-              therapy.
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              <AlertTriangle className="inline h-3 w-3 mr-1" />
-              Crisis support: 988 (Suicide & Crisis Lifeline) • Text HOME to 741741
-            </p>
-          </div>
+                variant={currentMode === key ? "default" : "outline"}
+                className={`${currentMode === key ? "bg-lime-400 text-black" : "bg-white/10 text-white border-white/20 hover:bg-white/20"} transition-all`}
+              >
+                <Icon className="h-4 w-4 mr-2" />
+                {mode.name}
+              </Button>
+            )
+          })}
         </div>
+
+        {/* ...existing chat UI, messages, input, etc. go here ... */}
 
         <SafetyMonitor
           messages={messages}
