@@ -6,6 +6,7 @@ import Script from "next/script"
 import Plasma from "@/components/plasma"
 import { GamificationOverlay } from "@/components/gamification-overlay"
 import { AccessibilityControls } from "@/components/accessibility-controls"
+import { FloatingChatButton } from "@/components/floating-chat-button"
 
 const inter = Inter({ subsets: ["latin"], display: "swap" })
 
@@ -76,7 +77,7 @@ export default function RootLayout({
       </head>
       <body>
         <div className="fixed inset-0 z-0 bg-black">
-          <Plasma color="#9333ea" speed={0.5} direction="forward" scale={1} opacity={0.10} mouseInteractive={false} />
+          <Plasma color="#9333ea" speed={0.3} direction="forward" scale={1.2} opacity={0.25} mouseInteractive={false} />
         </div>
 
         <div className="fixed top-4 right-4 z-50">
@@ -85,6 +86,7 @@ export default function RootLayout({
 
         <div className="relative z-10">{children}</div>
         <GamificationOverlay />
+        <FloatingChatButton />
       </body>
     </html>
   )

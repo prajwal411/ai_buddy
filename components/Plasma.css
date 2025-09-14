@@ -3,4 +3,80 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background-color: #060818; /* Darker background for better contrast */
+}
+
+/* Animation for fallback version - Primary layer */
+.plasma-fallback-animation {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: 
+    radial-gradient(circle at 30% 50%, rgba(147, 51, 234, 0.8), transparent 30%),
+    radial-gradient(circle at 70% 40%, rgba(59, 130, 246, 0.8), transparent 30%),
+    radial-gradient(circle at 50% 60%, rgba(16, 185, 129, 0.7), transparent 40%);
+  opacity: 0.8;
+  animation: rotate-plasma 60s linear infinite;
+  pointer-events: none;
+  mix-blend-mode: screen; /* Enhances contrast and color vibrancy */
+}
+
+/* Secondary animation layer for more depth */
+.plasma-fallback-animation-secondary {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: 
+    radial-gradient(circle at 70% 30%, rgba(236, 72, 153, 0.6), transparent 35%),
+    radial-gradient(circle at 20% 70%, rgba(124, 58, 237, 0.6), transparent 35%);
+  opacity: 0.6;
+  animation: rotate-plasma-secondary 80s linear infinite;
+  pointer-events: none;
+  mix-blend-mode: overlay; /* Creates more contrast and depth */
+}
+
+@keyframes rotate-plasma {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes rotate-plasma-secondary {
+  0% {
+    transform: rotate(0deg) scale(1.2);
+  }
+  50% {
+    transform: rotate(-180deg) scale(1);
+  }
+  100% {
+    transform: rotate(-360deg) scale(1.2);
+  }
+}
+
+/* Add a subtle pulsing effect to enhance motion */
+@media (prefers-reduced-motion: no-preference) {
+  .plasma-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.4) 100%);
+    opacity: 0.3;
+    animation: pulse 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+  }
 }

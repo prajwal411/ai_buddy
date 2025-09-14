@@ -61,7 +61,18 @@ export function VoiceInterface({ onTranscript, onSpeakMessage, className = "" }:
   }
 
   if (!speechSupported && !ttsSupported) {
-    return null
+    // Return a placeholder button instead of null to maintain layout consistency
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="bg-white/10 text-white border-white/20 hover:bg-white/20 opacity-50"
+        disabled
+        title="Voice features not supported in this browser"
+      >
+        <Mic className="h-4 w-4" />
+      </Button>
+    );
   }
 
   return (

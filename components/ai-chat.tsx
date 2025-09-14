@@ -12,6 +12,8 @@ import { VoiceInterface } from "@/components/voice-interface"
 import { SafetyMonitor } from "@/components/safety-monitor"
 import { EmergencyResources } from "@/components/emergency-resources"
 import { useCrisisDetection } from "@/hooks/use-crisis-detection"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { ChatInput } from "@/components/ui/chat-input"
 
 interface Message {
   id: string
@@ -104,6 +106,9 @@ export function AIChat() {
       timestamp: new Date(),
     }
     setMessages((prev) => [...prev, modeMessage])
+    
+    // Show quick responses when mode changes
+    setShowQuickResponses(true)
   }
 
   const getModeChangeMessage = (mode: ChatMode): string => {
@@ -143,6 +148,13 @@ export function AIChat() {
       }
       setMessages((prev) => [...prev, aiMessage])
       setIsTyping(false)
+      
+      // Show quick responses again after AI responds
+      setShowQuickResponses(true)
+      
+      // Focus the input after AI response
+      const inputElement = document.getElementById('ai-chat-input') as HTMLInputElement;
+      if (inputElement) inputElement.focus();
     }, 1500)
   }
 
@@ -228,14 +240,17 @@ export function AIChat() {
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
     setIsTyping(true)
-    setShowQuickResponses(false)
+    setShowQuickResponses(false) // Hide quick responses when user sends a message
 
     if (messages.filter((m) => m.sender === "user").length >= 4) {
       setTimeout(() => generateSessionSummary(), 3000)
     }
 
+    // Store the current input value before clearing it to use in AI response generation
+    const currentInput = inputValue;
+
     setTimeout(() => {
-      const aiResponse = generateAIResponse(inputValue)
+      const aiResponse = generateAIResponse(currentInput)
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: aiResponse,
@@ -244,6 +259,13 @@ export function AIChat() {
       }
       setMessages((prev) => [...prev, aiMessage])
       setIsTyping(false)
+      
+      // Show quick responses after AI responds
+      setShowQuickResponses(true)
+      
+      // Focus the input after bot reply for better UX
+      const inputElement = document.getElementById('ai-chat-input') as HTMLInputElement;
+      if (inputElement) inputElement.focus();
     }, 1500)
   }
 
@@ -273,14 +295,39 @@ export function AIChat() {
   }
 
   return (
-    <section id="chat" className="py-16">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-4">AI Mental Health Chat</h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">
-            Choose your preferred support mode and have a personalized conversation with your AI companion.
-          </p>
-        </div>
+    <ErrorBoundary
+      fallback={
+        <section id="chat" className="py-16">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-white mb-4">AI Mental Health Chat</h2>
+              <p className="text-gray-300 max-w-2xl mx-auto">
+                There was a problem loading the chat. Please refresh the page to try again.
+              </p>
+            </div>
+            <div className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden shadow-xl p-8 text-center">
+              <AlertTriangle className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Chat Temporarily Unavailable</h3>
+              <p className="text-gray-300 mb-4">We're experiencing some technical difficulties with our chat feature.</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-lime-400 hover:bg-lime-500 text-black"
+              >
+                Refresh Page
+              </Button>
+            </div>
+          </div>
+        </section>
+      }
+    >
+      <section id="chat" className="py-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-white mb-4">AI Mental Health Chat</h2>
+            <p className="text-gray-300 max-w-2xl mx-auto">
+              Choose your preferred support mode and have a personalized conversation with your AI companion.
+            </p>
+          </div>
 
         <div className="flex flex-wrap gap-3 justify-center mb-6">
           {Object.entries(CHAT_MODES).map(([key, mode]) => {
@@ -299,7 +346,160 @@ export function AIChat() {
           })}
         </div>
 
-        {/* ...existing chat UI, messages, input, etc. go here ... */}
+        <div className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden shadow-xl">
+          {/* Chat messages area */}
+          <ScrollArea ref={scrollAreaRef} className="h-96 px-4 py-4">
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] px-4 py-3 rounded-lg ${
+                      message.sender === "user"
+                        ? "bg-lime-500 text-black"
+                        : "bg-gray-800 text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      {message.sender === "user" ? (
+                        <User className="h-4 w-4" />
+                      ) : (
+                        <Bot className="h-4 w-4" />
+                      )}
+                      <span className="text-xs opacity-70">
+                        {message.sender === "user" ? "You" : CHAT_MODES[currentMode].name}
+                      </span>
+                      {message.mood && (
+                        <Badge variant="outline" className="text-xs">
+                          {message.mood}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm">{message.content}</p>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs opacity-50">
+                        {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      {message.sender === "ai" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 opacity-50 hover:opacity-100"
+                          onClick={() => handleSpeakMessage(message.content)}
+                        >
+                          <Volume2 className="h-3 w-3" />
+                          <span className="sr-only">Read aloud</span>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] px-4 py-3 rounded-lg bg-gray-800 text-white">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Bot className="h-4 w-4" />
+                      <span className="text-xs opacity-70">{CHAT_MODES[currentMode].name}</span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"></div>
+                      <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                      <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {sessionSummary && (
+                <div className="my-4 p-4 bg-lime-500/10 border border-lime-500/20 rounded-lg">
+                  <h4 className="font-medium text-lime-400 text-sm mb-2">Session Summary</h4>
+                  <p className="text-sm text-gray-300">{sessionSummary}</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Quick responses */}
+          {showQuickResponses && (
+            <div className="p-3 border-t border-gray-700 bg-gray-800/50">
+              <div className="flex flex-wrap gap-2 justify-center">
+                {QUICK_RESPONSES.map((response) => (
+                  <Button
+                    key={response.text}
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/5 border-white/10 hover:bg-white/10"
+                    onClick={() => handleQuickResponse(response)}
+                  >
+                    <span className="mr-1">{response.emoji}</span> {response.text}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input area */}
+          <div className="p-3 border-t border-gray-700 bg-gray-800/50" id="ai-chat-input-area">
+            <ErrorBoundary
+              fallback={
+                <ChatInput 
+                  onSendMessage={(text) => {
+                    const userMessage: Message = {
+                      id: Date.now().toString(),
+                      content: text,
+                      sender: "user",
+                      timestamp: new Date(),
+                    };
+                    setMessages((prev) => [...prev, userMessage]);
+                    setIsTyping(true);
+                    setShowQuickResponses(false);
+                    
+                    setTimeout(() => {
+                      const aiMessage: Message = {
+                        id: (Date.now() + 1).toString(),
+                        content: "I'm sorry, there seems to be an issue with our chat system. Let me try to help you anyway.",
+                        sender: "ai",
+                        timestamp: new Date(),
+                      };
+                      setMessages((prev) => [...prev, aiMessage]);
+                      setIsTyping(false);
+                      setShowQuickResponses(true);
+                    }, 1500);
+                  }}
+                  inputClassName="bg-gray-700 border-gray-600 text-white focus:ring-lime-400"
+                  buttonClassName="bg-lime-400 hover:bg-lime-500 text-black"
+                />
+              }
+            >
+              <div className="flex gap-2">
+                {/* Wrap VoiceInterface in an error boundary to prevent it from crashing the entire component */}
+                <div className="flex-shrink-0">
+                  {typeof window !== 'undefined' && <VoiceInterface onTranscript={handleVoiceTranscript} />}
+                </div>
+                <Input
+                  id="ai-chat-input"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Type your message..."
+                  className="flex-1 bg-gray-700 border-gray-600 text-white focus:ring-lime-400"
+                  autoComplete="off"
+                  style={{ display: 'block' }} /* Force display */
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim()}
+                  className="bg-lime-400 hover:bg-lime-500 text-black flex-shrink-0"
+                >
+                  <Send className="h-4 w-4" />
+                  <span className="sr-only">Send message</span>
+                </Button>
+              </div>
+            </ErrorBoundary>
+          </div>
+        </div>
 
         <SafetyMonitor
           messages={messages}
@@ -308,5 +508,6 @@ export function AIChat() {
         />
       </div>
     </section>
+    </ErrorBoundary>
   )
 }

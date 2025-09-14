@@ -71,7 +71,16 @@ void mainImage(out vec4 o, vec2 C) {
     o = 1.+sin(S.y+p.z*.5+S.z-length(S-p)+vec4(2,1,0,8));
   }
   
+  // Enhanced color processing with improved contrast
   o.xyz = tanh(O/1e4);
+  
+  // Apply contrast enhancement
+  o.xyz = pow(o.xyz, vec3(0.85)); // Gamma correction for better contrast
+  
+  // Enhance saturation
+  float luminance = dot(o.xyz, vec3(0.299, 0.587, 0.114));
+  vec3 saturated = mix(vec3(luminance), o.xyz, 1.4); // Increase saturation by 40%
+  o.xyz = saturated;
 }
 
 bool finite1(float x){ return !(isnan(x) || isinf(x)); }
@@ -89,23 +98,55 @@ void main() {
   vec3 rgb = sanitize(o.rgb);
   
   float intensity = (rgb.r + rgb.g + rgb.b) / 3.0;
-  vec3 customColor = intensity * uCustomColor;
+  
+  // Enhance color vibrancy
+  vec3 customColor = intensity * uCustomColor * 1.2; // Increase color intensity by 20%
+  
+  // Apply more dramatic color mixing with enhanced contrast
   vec3 finalColor = mix(rgb, customColor, step(0.5, uUseCustomColor));
+  
+  // Apply contrast enhancement
+  finalColor = clamp(((finalColor - 0.5) * 1.2) + 0.5, 0.0, 1.0); // Increase contrast
   
   float alpha = length(rgb) * uOpacity;
   fragColor = vec4(finalColor, alpha);
 }`
 
 export const Plasma: React.FC<PlasmaProps> = ({
-  color = "#ffffff",
-  speed = 1,
+  color = "#6366f1", // Default to indigo color for better visibility
+  speed = 0.8, // Slightly lower default speed for smoother animation
   direction = "forward",
   scale = 1,
-  opacity = 1,
+  opacity = 1.2, // Slightly higher opacity for better contrast
   mouseInteractive = true,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mousePos = useRef({ x: 0, y: 0 })
+  
+  // Fallback function for devices without WebGL2 or low-end devices
+  const applyGradientFallback = () => {
+    if (!containerRef.current) return;
+    
+    const div = containerRef.current;
+    
+    // Create a rich gradient background with enhanced contrast
+    div.style.background = `
+      radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.7), transparent 60%),
+      radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.7), transparent 60%),
+      radial-gradient(circle at 50% 60%, rgba(16, 185, 129, 0.5), transparent 50%),
+      linear-gradient(to bottom right, #1a202c, #000000)
+    `;
+    
+    // Add a more vibrant animation using CSS
+    const animDiv = document.createElement('div');
+    animDiv.className = 'plasma-fallback-animation';
+    div.appendChild(animDiv);
+    
+    // Add a secondary layer for more depth and contrast
+    const secondaryAnimDiv = document.createElement('div');
+    secondaryAnimDiv.className = 'plasma-fallback-animation-secondary';
+    div.appendChild(secondaryAnimDiv);
+  }
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -114,24 +155,45 @@ export const Plasma: React.FC<PlasmaProps> = ({
     const testCanvas = document.createElement('canvas');
     const webgl2Supported = !!testCanvas.getContext('webgl2');
     if (!webgl2Supported) {
-      console.warn('WebGL2 is not supported on this device/browser. Plasma background will not render.');
+      console.warn('WebGL2 is not supported on this device/browser. Using static gradient fallback.');
+      applyGradientFallback();
       return;
     }
-
-    // --- Device detection ---
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    const isMobile = window.innerWidth < 768
+    
+    // Enhanced performance detection
+    const isLowEndDevice = navigator.hardwareConcurrency 
+      ? navigator.hardwareConcurrency <= 4 
+      : window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    // Check for battery status if available (without using the Battery API directly)
+    let isBatteryLow = false;
+    // Battery API check removed due to TypeScript errors
+    
+    // --- Device detection with enhanced criteria ---
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isMobile = window.innerWidth < 768 || /Android|Mobile/.test(navigator.userAgent);
+    
+    // Use fallback for low-power or low-end devices
+    if ((isMobile || isLowEndDevice || isBatteryLow) && !window.localStorage.getItem('force-plasma')) {
+      console.info('Using simplified background for better performance on this device');
+      applyGradientFallback();
+      return;
+    }
 
     const useCustomColor = color ? 1.0 : 0.0
     const customColorRgb = color ? hexToRgb(color) : [1, 1, 1]
     const directionMultiplier = direction === "reverse" ? -1.0 : 1.0
 
-    // Lower DPR on mobile/iOS
+    // Optimize DPR settings for better quality on capable devices
     const renderer = new Renderer({
       webgl: 2,
       alpha: true,
-      antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2) * (isIOS || isMobile ? 0.5 : 1),
+      antialias: !isMobile && !isLowEndDevice, // Enable antialiasing on higher-end devices
+      dpr: Math.min(
+        window.devicePixelRatio || 1, 
+        isLowEndDevice ? 1 : 2
+      ) * (isIOS ? 0.5 : isMobile ? 0.6 : 1.0),
+      powerPreference: 'high-performance', // Request high performance mode for better visuals
     })
     const gl = renderer.gl
     const canvas = gl.canvas as HTMLCanvasElement
@@ -193,10 +255,15 @@ export const Plasma: React.FC<PlasmaProps> = ({
     let raf = 0
     let lastTime = 0
     const t0 = performance.now()
+    
+    // Optimized framerate based on device capability
+    const frameInterval = isIOS ? 80 : isMobile ? 60 : 30; // Higher framerates for smoother animation
+    
+    // Use RAF with throttling for smoother animations
     const loop = (t: number) => {
       const delta = t - lastTime
-      if (!isIOS || delta > 33) { // 60fps desktop, ~30fps iOS
-        const timeValue = (t - t0) * 0.001
+      if (delta > frameInterval) { // Adjusted frame rate for better performance
+        const timeValue = (t - t0) * 0.001 * (speed * 0.5)
         if (direction === "pingpong") {
           const cycle = Math.sin(timeValue * 0.5) * directionMultiplier
           ;(program.uniforms.uDirection as any).value = cycle
@@ -207,7 +274,15 @@ export const Plasma: React.FC<PlasmaProps> = ({
       }
       raf = requestAnimationFrame(loop)
     }
-    raf = requestAnimationFrame(loop)
+    
+    // Use requestIdleCallback if available for better performance on supported browsers
+    if (typeof window.requestIdleCallback !== 'undefined' && !isMobile && !isIOS) {
+      window.requestIdleCallback(() => {
+        raf = requestAnimationFrame(loop)
+      })
+    } else {
+      raf = requestAnimationFrame(loop)
+    }
 
     return () => {
       cancelAnimationFrame(raf)
@@ -221,7 +296,7 @@ export const Plasma: React.FC<PlasmaProps> = ({
     }
   }, [color, speed, direction, scale, opacity, mouseInteractive])
 
-  return <div ref={containerRef} className="plasma-container pointer-events-none will-change-transform" />
+  return <div ref={containerRef} className="plasma-container pointer-events-none will-change-transform" data-plasma-optimized="true" />
 }
 
 export default Plasma
